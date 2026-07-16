@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Тихий отсчёт</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Karla:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream: #F6EFE7;
+    --cream-2: #FBF7F2;
+    --plum: #3E2A31;
+    --plum-soft: rgba(62,42,49,0.55);
+    --rose: #B6707B;
+    --rose-deep: #9A5560;
+    --rose-soft: #E3C3C7;
+    --gold: #C7A34C;
+    --gold-soft: #EBDDB6;
+    --sage: #8B9A87;
+    --ring-track: rgba(62,42,49,0.07);
+  }
+  *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html,body{
+    margin:0; padding:0; height:100%;
+    font-family: 'Karla', sans-serif;
+    color: var(--plum);
+    overflow: hidden;
+  }
+  body{
+    background:
+      radial-gradient(circle at 20% 8%, rgba(199,163,76,0.10), transparent 42%),
+      radial-gradient(circle at 85% 92%, rgba(182,112,123,0.14), transparent 45%),
+      var(--cream);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .stage{
+    width: 100%;
+    max-width: 420px;
+    height: 100%;
+    max-height: 900px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding: 28px 26px;
+    position: relative;
+  }
+  .eyebrow{
+    font-size: 11.5px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--rose-deep);
+    margin-bottom: 8px;
+    opacity: 0.9;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .eyebrow::before, .eyebrow::after{
+    content:'';
+    width: 14px;
+    height: 1px;
+    background: var(--rose-soft);
+  }
+  h1{
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: 32px;
+    margin: 0 0 6px 0;
+    text-align:center;
+    letter-spacing: 0.01em;
+    color: var(--plum);
+  }
+  .subtitle{
+    font-size: 12.5px;
+    color: var(--plum-soft);
+    text-align:center;
+    margin-bottom: 30px;
+    letter-spacing: 0.01em;
+    min-height: 16px;
+  }
+
+  /* Duration picker */
+  .picker-card{
+    width: 100%;
+    background: var(--cream-2);
+    border-radius: 26px;
+    padding: 22px 20px 26px;
+    margin-bottom: 26px;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 14px 34px rgba(62,42,49,0.07);
+    border: 1px solid rgba(62,42,49,0.05);
+  }
+  .picker-row{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap: 22px;
+  }
+  .stepper{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap: 10px;
+  }
+  .stepper-value{
+    font-family:'Cormorant Garamond', serif;
+    font-size: 44px;
+    font-weight: 600;
+    line-height:1;
+    min-width: 64px;
+    text-align:center;
+    font-variant-numeric: tabular-nums;
+  }
+  .stepper-label{
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--plum-soft);
+  }
+  .stepper-btns{
+    display:flex;
+    gap: 8px;
+  }
+  .stepper-btns button{
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--rose-soft);
+    background: transparent;
+    color: var(--rose-deep);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition: background 0.2s ease, transform 0.1s ease;
+  }
+  .stepper-btns button:active{ transform: scale(0.9); background: var(--rose-soft); }
+  .colon{
+    font-family:'Cormorant Garamond', serif;
+    font-size: 34px;
+    color: var(--rose-soft);
+    margin-top: -20px;
+  }
+  .presets{
+    display:flex;
+    justify-content:center;
+    gap: 8px;
+    margin-top: 18px;
+  }
+  .preset-chip{
+    font-size: 11.5px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(62,42,49,0.08);
+    background: transparent;
+    color: var(--plum-soft);
+    cursor:pointer;
+    letter-spacing: 0.02em;
+    transition: all 0.2s ease;
+  }
+  .preset-chip.active, .preset-chip:active{
+    background: var(--plum);
+    color: var(--cream);
+    border-color: var(--plum);
+  }
+
+  /* Ring */
+  .ring-wrap{
+    position: relative;
+    width: 246px;
+    height: 246px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom: 30px;
+  }
+  svg{ transform: rotate(-90deg); width:100%; height:100%; overflow: visible; }
+  .ring-track{ fill:none; stroke: var(--ring-track); stroke-width: 9; }
+  .ring-glow{
+    fill:none;
+    stroke: var(--rose);
+    stroke-width: 16;
+    stroke-linecap: round;
+    opacity: 0.14;
+    filter: blur(4px);
+    transition: stroke-dashoffset 1s linear, stroke 0.6s ease;
+  }
+  .ring-progress{
+    fill:none;
+    stroke: var(--rose);
+    stroke-width: 9;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear, stroke 0.6s ease;
+  }
+  .tick{ stroke: rgba(62,42,49,0.13); stroke-width: 2; }
+  .ring-center{
+    position:absolute;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+  }
+  .time-display{
+    font-family:'Cormorant Garamond', serif;
+    font-size: 50px;
+    font-weight: 500;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+  }
+  .time-label{
+    font-size: 10.5px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--plum);
+    opacity: 0.42;
+    margin-top: 9px;
+  }
+
+  .primary-btn{
+    appearance:none;
+    border:none;
+    background: linear-gradient(180deg, #4A3339, var(--plum));
+    color: var(--cream);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.05em;
+    padding: 18px 50px;
+    border-radius: 999px;
+    cursor:pointer;
+    transition: transform 0.15s ease, background 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 10px 26px rgba(62,42,49,0.22);
+  }
+  .primary-btn:active{ transform: scale(0.96); }
+  .primary-btn.running{
+    background: transparent;
+    color: var(--rose-deep);
+    box-shadow: none;
+    border: 1.5px solid var(--rose-soft);
+  }
+  .primary-btn.done-btn{
+    background: linear-gradient(180deg, #D4B15A, var(--gold));
+    box-shadow: 0 10px 26px rgba(199,163,76,0.35);
+  }
+  .secondary-link{
+    margin-top: 16px;
+    background:none;
+    border:none;
+    font-size: 12.5px;
+    color: var(--plum);
+    opacity: 0.38;
+    letter-spacing: 0.02em;
+    cursor:pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .footnote{
+    position:absolute;
+    bottom: 18px;
+    left: 26px;
+    right: 26px;
+    text-align:center;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--plum);
+    opacity: 0.32;
+  }
+  .glow-message{
+    font-family:'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 23px;
+    text-align:center;
+    color: var(--rose-deep);
+    margin-bottom: 34px;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.9s ease, transform 0.9s ease;
+    min-height: 30px;
+    padding: 0 12px;
+  }
+  .glow-message.show{ opacity:1; transform: translateY(0); }
+  .ring-wrap.done .ring-progress, .ring-wrap.done .ring-glow{ stroke: var(--gold); }
+  .ring-wrap.done{ animation: breathe 2.8s ease-in-out infinite; }
+  .ring-wrap.done .ring-glow{ opacity: 0.35; }
+  @keyframes breathe{
+    0%,100%{ filter: drop-shadow(0 0 0px rgba(199,163,76,0)); }
+    50%{ filter: drop-shadow(0 0 22px rgba(199,163,76,0.4)); }
+  }
+  .fade-swap{ transition: opacity 0.4s ease, transform 0.4s ease; }
+  @media (prefers-reduced-motion: reduce){
+    .ring-progress, .ring-glow{ transition:none; }
+    .ring-wrap.done{ animation:none; }
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="eyebrow" id="eyebrow">Личное время</div>
+  <h1 id="title">Тихий отсчёт</h1>
+  <div class="subtitle" id="subtitle">Задайте своё время и просто выдохните</div>
+
+  <div class="picker-card" id="pickerCard">
+    <div class="picker-row">
+      <div class="stepper">
+        <div class="stepper-btns">
+          <button id="hUp" aria-label="увеличить часы">+</button>
+        </div>
+        <div class="stepper-value" id="hVal">5</div>
+        <div class="stepper-label">часов</div>
+        <div class="stepper-btns">
+          <button id="hDown" aria-label="уменьшить часы">−</button>
+        </div>
+      </div>
+      <div class="colon">:</div>
+      <div class="stepper">
+        <div class="stepper-btns">
+          <button id="mUp" aria-label="увеличить минуты">+</button>
+        </div>
+        <div class="stepper-value" id="mVal">00</div>
+        <div class="stepper-label">минут</div>
+        <div class="stepper-btns">
+          <button id="mDown" aria-label="уменьшить минуты">−</button>
+        </div>
+      </div>
+    </div>
+    <div class="presets">
+      <button class="preset-chip" data-h="3" data-m="0">3ч</button>
+      <button class="preset-chip active" data-h="5" data-m="0">5ч</button>
+      <button class="preset-chip" data-h="8" data-m="0">8ч</button>
+      <button class="preset-chip" data-h="12" data-m="0">12ч</button>
+    </div>
+  </div>
+
+  <div class="glow-message" id="glowMessage"></div>
+
+  <div class="ring-wrap" id="ringWrap" style="display:none;">
+    <svg viewBox="0 0 246 246">
+      <circle class="ring-track" cx="123" cy="123" r="108"></circle>
+      <circle class="ring-glow" id="ringGlow" cx="123" cy="123" r="108"></circle>
+      <circle class="ring-progress" id="ringProgress" cx="123" cy="123" r="108"></circle>
+    </svg>
+    <div class="ring-center">
+      <div class="time-display" id="timeDisplay">5:00</div>
+      <div class="time-label" id="timeLabel">осталось</div>
+    </div>
+  </div>
+
+  <button class="primary-btn" id="mainBtn">Начать</button>
+  <button class="secondary-link" id="resetBtn" style="display:none;">сбросить</button>
+
+  <div class="footnote">Уведомление придёт, если страница останется открытой, или откройте её снова позже — она помнит, на чём остановилась.</div>
+</div>
+
+<script>
+  const CIRC = 2 * Math.PI * 108;
+
+  const ringProgress = document.getElementById('ringProgress');
+  const ringGlow = document.getElementById('ringGlow');
+  const ringWrap = document.getElementById('ringWrap');
+  const timeDisplay = document.getElementById('timeDisplay');
+  const timeLabel = document.getElementById('timeLabel');
+  const mainBtn = document.getElementById('mainBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const glowMessage = document.getElementById('glowMessage');
+  const eyebrow = document.getElementById('eyebrow');
+  const title = document.getElementById('title');
+  const subtitle = document.getElementById('subtitle');
+  const pickerCard = document.getElementById('pickerCard');
+  const hVal = document.getElementById('hVal');
+  const mVal = document.getElementById('mVal');
+  const presetChips = document.querySelectorAll('.preset-chip');
+
+  [ringProgress, ringGlow].forEach(el => {
+    el.style.strokeDasharray = CIRC;
+    el.style.strokeDashoffset = 0;
+  });
+
+  let hours = 5;
+  let minutes = 0;
+  let durationMs = hours * 3600000;
+  let startTime = null;
+  let tickInterval = null;
+  let notifiedDone = false;
+
+  const gentleLines = [
+    "Самое время позаботиться о себе.",
+    "Небольшая пауза для себя — сейчас в самый раз.",
+    "Пора уделить себе минутку внимания."
+  ];
+
+  // small elegant notification icon (rose ring), as data URI SVG
+  const notifIcon = "data:image/svg+xml;utf8," + encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="192" height="192">
+      <rect width="192" height="192" rx="40" fill="#F6EFE7"/>
+      <circle cx="96" cy="96" r="60" fill="none" stroke="#B6707B" stroke-width="14"/>
+      <circle cx="96" cy="96" r="60" fill="none" stroke="#C7A34C" stroke-width="14"
+        stroke-dasharray="377" stroke-dashoffset="90" stroke-linecap="round" transform="rotate(-90 96 96)"/>
+    </svg>
+  `);
+
+  function clampMinutes(v){ return ((v % 60) + 60) % 60; }
+
+  function updatePickerDisplay(){
+    hVal.textContent = hours;
+    mVal.textContent = String(minutes).padStart(2,'0');
+    presetChips.forEach(chip => {
+      const ch = parseInt(chip.dataset.h,10), cm = parseInt(chip.dataset.m,10);
+      chip.classList.toggle('active', ch === hours && cm === minutes);
+    });
+  }
+
+  document.getElementById('hUp').addEventListener('click', () => {
+    if(hours < 12){ hours++; updatePickerDisplay(); }
+  });
+  document.getElementById('hDown').addEventListener('click', () => {
+    if(hours > 0){ hours--; if(hours===0 && minutes===0) minutes = 15; updatePickerDisplay(); }
+  });
+  document.getElementById('mUp').addEventListener('click', () => {
+    minutes = clampMinutes(minutes + 15); updatePickerDisplay();
+  });
+  document.getElementById('mDown').addEventListener('click', () => {
+    minutes = clampMinutes(minutes - 15);
+    if(hours===0 && minutes===0) minutes = 15;
+    updatePickerDisplay();
+  });
+  presetChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      hours = parseInt(chip.dataset.h,10);
+      minutes = parseInt(chip.dataset.m,10);
+      updatePickerDisplay();
+    });
+  });
+
+  async function loadState(){
+    try{
+      const res = await window.storage.get('quiet-hours-state', false);
+      if(res && res.value){
+        const parsed = JSON.parse(res.value);
+        startTime = parsed.start;
+        durationMs = parsed.duration;
+        hours = Math.floor(durationMs / 3600000);
+        minutes = Math.round((durationMs % 3600000) / 60000);
+      }
+    }catch(e){ startTime = null; }
+    updatePickerDisplay();
+    render();
+    if(startTime){ tickInterval = setInterval(render, 1000); }
+  }
+
+  async function saveState(){
+    try{
+      if(startTime === null){
+        await window.storage.delete('quiet-hours-state', false);
+      }else{
+        await window.storage.set('quiet-hours-state', JSON.stringify({start: startTime, duration: durationMs}), false);
+      }
+    }catch(e){ console.error('storage error', e); }
+  }
+
+  function formatRemaining(ms){
+    const totalSeconds = Math.max(0, Math.floor(ms/1000));
+    const h = Math.floor(totalSeconds/3600);
+    const m = Math.floor((totalSeconds%3600)/60);
+    return { h, m };
+  }
+
+  function render(){
+    if(!startTime){
+      pickerCard.style.display = 'block';
+      ringWrap.style.display = 'none';
+      mainBtn.textContent = 'Начать';
+      mainBtn.classList.remove('running','done-btn');
+      resetBtn.style.display = 'none';
+      ringWrap.classList.remove('done');
+      glowMessage.classList.remove('show');
+      glowMessage.textContent = '';
+      eyebrow.textContent = 'Личное время';
+      title.textContent = 'Тихий отсчёт';
+      subtitle.textContent = 'Задайте своё время и просто выдохните';
+      subtitle.style.display = 'block';
+      return;
+    }
+
+    pickerCard.style.display = 'none';
+    ringWrap.style.display = 'flex';
+    subtitle.style.display = 'none';
+    resetBtn.style.display = 'inline';
+
+    const elapsed = Date.now() - startTime;
+    const remaining = durationMs - elapsed;
+
+    if(remaining <= 0){
+      ringWrap.classList.add('done');
+      ringProgress.style.strokeDashoffset = 0;
+      ringGlow.style.strokeDashoffset = 0;
+      mainBtn.textContent = 'Начать заново';
+      mainBtn.classList.remove('running');
+      mainBtn.classList.add('done-btn');
+      timeDisplay.textContent = '✓';
+      timeLabel.textContent = 'время пришло';
+      eyebrow.textContent = 'Готово';
+      title.textContent = 'Момент настал';
+      if(!glowMessage.classList.contains('show')){
+        glowMessage.textContent = gentleLines[Math.floor(Math.random()*gentleLines.length)];
+        requestAnimationFrame(()=> glowMessage.classList.add('show'));
+      }
+      if(!notifiedDone){
+        notifiedDone = true;
+        tryNotify();
+      }
+      if(tickInterval){ clearInterval(tickInterval); tickInterval = null; }
+      return;
+    }
+
+    const { h, m } = formatRemaining(remaining);
+    timeDisplay.textContent = h + ':' + String(m).padStart(2,'0');
+    timeLabel.textContent = 'осталось';
+    mainBtn.textContent = 'Идёт отсчёт';
+    mainBtn.classList.remove('done-btn');
+    mainBtn.classList.add('running');
+    eyebrow.textContent = 'Отсчёт идёт';
+    title.textContent = 'Тихий отсчёт';
+
+    const fraction = elapsed / durationMs;
+    ringProgress.style.strokeDashoffset = CIRC * fraction;
+    ringGlow.style.strokeDashoffset = CIRC * fraction;
+  }
+
+  function tryNotify(){
+    if(!('Notification' in window)) return;
+    if(Notification.permission === 'granted'){
+      const n = new Notification('✦ Тихий отсчёт завершён', {
+        body: gentleLines[0],
+        icon: notifIcon,
+        badge: notifIcon,
+        silent: false,
+        requireInteraction: true,
+        tag: 'quiet-hours'
+      });
+    }
+  }
+
+  mainBtn.addEventListener('click', async () => {
+    if(startTime){
+      const elapsed = Date.now() - startTime;
+      if(elapsed >= durationMs){
+        durationMs = hours * 3600000 + minutes * 60000;
+        startTime = Date.now();
+        notifiedDone = false;
+        await saveState();
+        if(tickInterval) clearInterval(tickInterval);
+        tickInterval = setInterval(render, 1000);
+        render();
+      }
+      return;
+    }
+    if('Notification' in window && Notification.permission === 'default'){
+      try{ await Notification.requestPermission(); }catch(e){}
+    }
+    durationMs = hours * 3600000 + minutes * 60000;
+    if(durationMs <= 0) durationMs = 60000;
+    startTime = Date.now();
+    notifiedDone = false;
+    await saveState();
+    tickInterval = setInterval(render, 1000);
+    render();
+  });
+
+  resetBtn.addEventListener('click', async () => {
+    startTime = null;
+    notifiedDone = false;
+    if(tickInterval){ clearInterval(tickInterval); tickInterval = null; }
+    await saveState();
+    render();
+  });
+
+  updatePickerDisplay();
+  loadState();
+</script>
+</body>
+</html>
